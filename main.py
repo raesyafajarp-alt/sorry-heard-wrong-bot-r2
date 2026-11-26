@@ -1,29 +1,37 @@
-#!/usr/bin/env python3
-"""Sorry, I Heard That Wrong — writes one funny smart-speaker apology."""
+"""Sorry, I Heard That Wrong — round 2 entry writer.
 
-ENTRY = "Sorry \u2014 I heard 'wake me at seven' and woke you at seven. PM. You're welcome."
+A small deterministic program: it keeps the one-line joke, checks the
+length sits inside the contest window, and writes it with no trailing
+newline to /output/entry.txt. Nothing random, nothing fetched.
+"""
 
-MAX_CHARS = 140
+from pathlib import Path
+
+ENTRY = "Sorry — I heard 'wake me at seven' and woke you at seven. PM. You're welcome."
+LOWER = 1
+UPPER = 140
+TARGET = Path("/output") / "entry.txt"
 
 
-def validate_entry(text: str) -> None:
-    """Gate: 1-140 characters, not only whitespace, single line."""
-    if not (1 <= len(text) <= MAX_CHARS):
-        raise ValueError(f"entry must be 1-{MAX_CHARS} chars, got {len(text)}")
-    if not text.strip():
-        raise ValueError("entry must not be only whitespace")
+def length_ok(text):
+    """True when the text fits the 1-140 character window."""
+    return LOWER <= len(text) <= UPPER
+
+
+def save_entry(text):
+    """Check the entry, then write it exactly, no trailing newline."""
     if "\n" in text or "\r" in text:
-        raise ValueError("entry must be a single line")
+        raise ValueError("entry must be one line only")
+    if not length_ok(text):
+        raise ValueError(
+            "entry must be %d-%d chars, got %d" % (LOWER, UPPER, len(text))
+        )
+    TARGET.parent.mkdir(parents=True, exist_ok=True)
+    TARGET.write_text(text, encoding="utf-8")
 
 
-def _write_entry(text: str, path: str = "/output/entry.txt") -> None:
-    validate_entry(text)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(text)
-
-
-def main() -> None:
-    _write_entry(ENTRY)
+def main():
+    save_entry(ENTRY)
 
 
 if __name__ == "__main__":
